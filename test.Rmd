@@ -1,0 +1,85 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-07-28"
+---
+
+```{r}
+library(readxl)
+
+X112年1_10月道路施工路段資料 <- read_excel("C:/Users/adam8/OneDrive/Data project/Highway/施工路段資料/112年1-10月道路施工路段資料.xlsx", 
+     col_types = c("text", "text", "date", 
+         "date", "text", "text", "text", "text", 
+         "text"))
+```
+
+```{r}
+colnames(X112年1_10月道路施工路段資料) = c("事件編號",
+"事件階段",
+"階段開始時間",
+"階段結束時間",
+"路線",
+"方向",
+"起始里程",
+"終止里程",
+"占用車道")
+X112年1_10月道路施工路段資料 = X112年1_10月道路施工路段資料[-1,]
+```
+
+```{r}
+hist(as.numeric(X112年1_10月道路施工路段資料$方向))
+```
+
+```{r}
+library(tidyverse)
+
+# Create a data frame that maps numbers to directions
+directions <- tibble(
+  num = c(1, 2, 3, 4),
+  direction = c("South", "North", "East", "West")
+)
+
+# Convert sequence to directions
+sequence_df <- tibble(num = as.numeric(X112年1_10月道路施工路段資料$方向)) %>%
+  left_join(directions, by = "num")
+
+# Count occurrences of each direction
+direction_counts <- sequence_df %>%
+  count(direction)
+
+# Create the pie chart
+ggplot(direction_counts, aes(x = "", y = n, fill = direction)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  theme_void() +  # Remove background, gridlines, and axes
+  labs(fill = "Direction", y = "", x = "", title = "Pie Chart of Directions")
+```
+
+```{r}
+# Create a tibble that maps each code to its route
+routes <- tibble(
+  code = c(10010, 10018, 10019, 10020, 10030, 10031, 10040, 10050, 10060, 10080, 10100),
+  route = c("國1", "高港高架", "國1高架", "國2", "國3", "國3甲", "國4", "國5", "國6", "國8", "國10")
+)
+
+# Convert sequence to directions
+sequence_df <- tibble(code = as.numeric(X112年1_10月道路施工路段資料$路線)) %>%
+  left_join(routes, by = "code")
+
+# Count occurrences of each route
+route_counts <- sequence_df %>%
+  count(route)
+
+# Create the pie chart
+ggplot(route_counts, aes(x = "", y = n, fill = route)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  theme_void() +  # Remove background, gridlines, and axes
+  labs(fill = "Route", y = "", x = "", title = "Pie Chart of Routes")
+
+names(hist(as.numeric(X112年1_10月道路施工路段資料$路線)))
+order(hist(as.numeric(X112年1_10月道路施工路段資料$路線))$counts)
+
+```
+
+
