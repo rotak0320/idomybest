@@ -1,1 +1,213 @@
+---
+title: "113 freeway"
+author: "Yao-Chih Hsu, "
+output: html_notebook
+---
+# references
+data download from [https://freeway2024.tw/](https://freeway2024.tw/).
+
+# dataset input
+```{r}
+library(readxl)
+data <- read_xlsx(path = "112年1-10月交通事故簡訊通報資料.xlsx", sheet = "交通事故簡報通報資料")
+```
+
+# summary before data clean
+```{r}
+library(dplyr)
+summary(data)
+
+n <- ncol(data)
+data.unique <- sapply(1:n, function(x){data[ ,x] %>% unique() %>% unlist() %>% unname() %>% sort() %>% return()})
+names(data.unique) = colnames(data)
+print(data.unique)
+summary(data.unique)
+
+print(paste0("There have ", sum(is.na(data)), " NA(s) in this dataset."))
+```
+
+# data clean
+```{r}
+library(lubridate)
+colnames(data) <- gsub("\r\n", "", colnames(data))
+data <- as.data.frame(data)
+data <- subset(x = data,
+               select = -c(事件發生, 交控中心接獲通報, CCTV監看現場, CMS發布資訊, 交控中心通報工務段, 事故處理小組出發, 事故處理小組抵達, 事故處理小組完成, 簡訊內容))
+# 定義要替換的字詞
+replace_words.direction <- list(
+  "國道1號" = c("國道1號", "國1"),
+  "國道2號" = c("國道2號", "國2"),
+  "2甲" = c("國2甲", "國道2甲"),
+  "國道3號" = c("國道3號", "國3", "南港連絡道", "南港聯絡道"),
+  "國道3甲號" = c("國3甲", "國道3甲"),
+  "國道4號" = c("國道4號", "國4"),
+  "國道5號" = c("國道5號", "國5"),
+  "國道6號" = c("國道6號", "國6"),
+  "國道8號" = c("國道8號", "國8"),
+  "國道10號" = c("國道10號", "國10"),
+  "台2己線" = c("港西聯外道路")
+  )
+# 使用 gsub 函數替換多個字詞
+for (i in 1:length(replace_words.direction)) {
+  name <- names(replace_words.direction)[i]
+  for (j in 1:length(replace_words.direction[[i]])) {
+    replacement <- replace_words.direction[[i]][j]
+  data$國道名稱 <- sapply(data$國道名稱, function(x) {return(ifelse(x == replacement, name, x))})
+  }
+}
+data <- data[!is.na(data$國道名稱), ] # 將未有國道資訊的路段剃除
+data <- data[!is.na(data$里程), ] # 將未有里程的路段剃除
+
+# 定義要替換的字詞
+replace_words.direction <- list(
+  北 = c("北向"),
+  西 = c("西向"),
+  東 = c("東向"),
+  南 = c("南向"),
+  南北 = c("雙向")
+  )
+# 使用 gsub 函數替換多個字詞
+for (i in 1:length(replace_words.direction)) {
+  name <- names(replace_words.direction)[i]
+  for (j in 1:length(replace_words.direction[[i]])) {
+    replacement <- replace_words.direction[[i]][j]
+  data$方向 <- sapply(data$方向, function(x) {return(ifelse(x == replacement, name, x))})
+  }
+}
+data <- data %>% mutate(事件排除_時 = hour(data$事件排除))
+data <- data %>% mutate(事件排除_分 = minute(data$事件排除))
+data <- subset(x = data, select = -c(事件排除))
+data$事故類型 <- as.integer(factor(data$事故類型))
+
+# 定義要替換的字詞
+replace_words <- list(符號 = c( "\"", "\r", "\n"),
+                            施工車 = c("事故班緩撞車", "工程車", "施工車", "施工緩撞車", "緩撞車", "緩撞車", "工工程車", "事故班標誌車", "施工高空車", "施工掃地車", "施工標緻車", "高空作業車"),
+                            大客車 = c("大客", "中型巴士", "中客車", "國光客運"),
+                            小客車 = c("小自車", "小自客", "小客"),
+                            大貨車 = c("大貨", "貨車", "貨櫃車", "聯結車", "連結車", "284貨車", "中型貨車", "槽車", "大貨車ˉ"),
+                            小貨車 = c("小貨", "小客貨", "小營業貨", "小自貨"),
+                            水泥車 = c("預拌水泥車", "預拌混泥土車"),
+                            其他車輛 = c("重型機車", "機車", "重機", "警戒車", "其他")
+                            )
+# 使用 gsub 函數替換多個字詞
+for(word in replace_words$符號){
+  data[ ,28:39] <- sapply(data[ ,28:39], function(x) gsub(word, "", x))
+}
+for (i in 1:length(replace_words)) {
+  name <- names(replace_words)[i]
+  for (j in 1:length(replace_words[[i]])) {
+    replacement <- replace_words[[i]][j]
+  data[, 28:39] <- sapply(data[, 28:39], function(x) {return(ifelse(x == replacement, name, x))})
+  }
+}
+```
+
+# summary after data clean
+```{r}
+summary(data)
+
+n <- ncol(data)
+data.unique <- sapply(1:n, function(x){data[ ,x] %>% unique() %>% unlist() %>% unname() %>% sort %>% return()})
+names(data.unique) <- colnames(data)
+print(data.unique)
+summary(data.unique)
+
+print(paste0("There have ", sum(is.na(data)), " NA(s) in this dataset."))
+```
+
+# data plot
+```{r}
+# all
+data.plot <- data[, -c(36:39)]
+name <- names(data.unique)
+name <- name[-c(36:39)]
+for (i in 1:ncol(data.plot)) {
+  barplot(table(data.plot[ ,i]), main = name[i], xlab = "類別", ylab = "頻率", las = 2)
+}
+
+# 死亡 & 受傷
+name <- colnames(data.plot[ ,11:12])
+barplot(colSums(data.plot[ ,11:12], na.rm = TRUE), main = "死亡 & 受傷", xlab = "類別", ylab = "頻率", las = 2)
+
+# 車道
+name <- colnames(data.plot[ ,13:20])
+barplot(colSums(data.plot[ ,13:20], na.rm = TRUE), main = "車道", xlab = "類別", ylab = "頻率", las = 2)
+```
+
+
+```{r}
+library(osmdata) # get data from https://www.openstreetmap.org/
+library(sf)
+library(dplyr)
+library(tidyr)
+
+# 定義一個函數來獲取國道數據
+get_road_data <- function(road_name) {
+  query <- opq(bbox = c(119, 21, 122, 26)) %>% # 台灣的地理座標
+    add_osm_feature(key = 'ref:zh', value = road_name)
+  osmdata_sf(query)
+}
+# 台灣的 ref 道路定義
+# https://wiki.openstreetmap.org/wiki/Taiwan/Taiwan_tagging
+
+# 定義函數來計算指定里程的經緯度座標
+get_coordinates_at_distance <- function(road_data, distance) {
+  # 將路徑按距離劃分
+  road_line <- st_as_sf(road_data$osm_lines) # 將輸入的道路數據 road_data 轉換為簡單特徵集（sf）格式。road_data$osm_lines 包含從 OSM 獲取的道路線條數據。
+  if (nrow(road_line) == 0) { # 如果 road_line 中沒有任何行，返回 NA，表示沒有找到道路數據。
+    return(c(NA, NA))
+  }
+  road_segmentized <- st_segmentize(road_line, dfMaxLength = 1000) # 使用 st_segmentize 函數將道路線條按一定的距離（此處為 1000 米）劃分為更小的段。這樣做的目的是將長路徑分割成較短的段，以便更準確地計算距離。
+  points <- st_cast(road_segmentized, "POINT") # 將劃分後的道路段轉換為點。st_cast 函數將線段轉換為一系列的點，這些點代表每個劃分段的端點。
+  coordinates <- st_coordinates(points) # 獲取所有點的經緯度座標。
+  if (round(distance) + 1 > nrow(coordinates)) { # 檢查輸入的距離是否超過了點的數量。如果超過了，返回 NA，表示所需距離超出了道路的總長度。
+    return(c(NA, NA))
+  }
+  return(coordinates[round(distance) + 1, ]) # 返回指定距離處的點的經緯度座標。round(distance) + 1 是為了匹配點的索引。
+}
+
+# 定義國道列表
+road_list <- data.unique$國道名稱
+
+# 獲取各國道數據
+road_data_list <- lapply(road_list, get_road_data)
+names(road_data_list) <- road_list
+
+# 計算座標
+# data <- data %>% # 開始對 data 數據框進行操作。data 包含了國道名稱、方向和里程數的數據。
+#   rowwise() %>% # 將數據框設置為逐行操作模式，這樣後續的操作將針對每一行數據逐行進行。
+#   mutate(
+#     經度 = get_coordinates_at_distance(road_data_list[[國道名稱]], 里程)[1],
+#     緯度 = get_coordinates_at_distance(road_data_list[[國道名稱]], 里程)[2]
+#   )
+data <- data %>% mutate(經度 = NA, 緯度 = NA)
+for(i in 1:nrow(data)){
+  coordinates <- get_coordinates_at_distance(road_data_list[[data$國道名稱[i]]], data$里程[i])
+  data$經度[i] <- coordinates[1]
+  data$緯度[i] <- coordinates[2]
+}
+
+# 打印結果
+print(data)
+```
+
+```{r}
+# 定義函數來調用 Nominatim API 並提取行政區域的代碼
+get_admin_code <- function(lon, lat) {
+  url <- paste0("https://nominatim.openstreetmap.org/reverse?format=json&lat=", lat, "&lon=", lon, "&zoom=10&addressdetails=1")
+  res <- GET(url)
+  if (status_code(res) == 200) {
+    content <- fromJSON(content(res, as = "text", encoding = "UTF-8"))
+    if (!is.null(content$address)) {
+      return(content$address$city_code %||% content$address$town_code %||% content$address$village_code %||% NA)
+    }
+  }
+  return(NA)
+}
+
+# 獲取每個座標的行政區域代碼
+data <- data %>%
+  rowwise() %>%
+  mutate(行政區域 = get_admin_code(經度, 緯度))
+```
 
