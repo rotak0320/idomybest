@@ -6,3 +6,6 @@
 
 ### 施工路段之路線
 ![image](https://github.com/user-attachments/assets/463ca79e-69ec-4204-94c3-0a1e44cf7b24)
+
+### 施工路段之占用車道
+![image](https://github.com/user-attachments/assets/64f6a091-032e-4c64-9f78-2c42e6b7d86d)
