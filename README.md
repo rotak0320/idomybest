@@ -1,5 +1,9 @@
 # 113年國道智慧交通管理創意競賽
 
+## Raw data
+![image](https://github.com/user-attachments/assets/f000bdf6-db2c-4baa-9dcc-437a6f1bfec1)
+
+
 ## 資料視覺化
 ### 施工路段之方向
 ![image](https://github.com/user-attachments/assets/7d26e38f-2623-4a1e-8e64-44c721f95feb)
