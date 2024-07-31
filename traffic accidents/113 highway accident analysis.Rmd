@@ -33,6 +33,8 @@ colnames(data) <- gsub("\r\n", "", colnames(data))
 data <- as.data.frame(data)
 data <- subset(x = data,
                select = -c(事件發生, 交控中心接獲通報, CCTV監看現場, CMS發布資訊, 交控中心通報工務段, 事故處理小組出發, 事故處理小組抵達, 事故處理小組完成, 簡訊內容))
+data <- data %>% 
+  mutate(週次 = week(paste0(年, "-", ifelse(月 > 9, 月, paste0(0, 月)), "-", ifelse(日 > 9, 日, paste0(0, 日)))))
 # 定義要替換的字詞
 replace_words.direction <- list(
   "國道1號" = c("國道1號", "國1"),
@@ -192,6 +194,10 @@ print(data)
 ```
 
 ```{r}
+library(httr)
+library(jsonlite)
+library(dplyr)
+
 # 定義函數來調用 Nominatim API 並提取行政區域的代碼
 get_admin_code <- function(lon, lat) {
   url <- paste0("https://nominatim.openstreetmap.org/reverse?format=json&lat=", lat, "&lon=", lon, "&zoom=10&addressdetails=1")
@@ -199,15 +205,55 @@ get_admin_code <- function(lon, lat) {
   if (status_code(res) == 200) {
     content <- fromJSON(content(res, as = "text", encoding = "UTF-8"))
     if (!is.null(content$address)) {
-      return(content$address$city_code %||% content$address$town_code %||% content$address$village_code %||% NA)
+      # return(content$address$suburb %||% content$address$village %||% content$address$citycity %||% NA)
+      return(content$display_name)
     }
   }
   return(NA)
 }
 
 # 獲取每個座標的行政區域代碼
-data <- data %>%
-  rowwise() %>%
-  mutate(行政區域 = get_admin_code(經度, 緯度))
+data <- data %>% mutate(行政區域 = NA)
+for(i in 1:nrow(data)){
+  data$行政區域[i] <- get_admin_code(data$經度[i], data$緯度[i])
+}
+
+# 打印結果
+print(data)
+```
+
+```{r}
+write.csv(x = data, file = "output.csv")
+```
+
+```{r}
+# 每小時車禍數量統計
+library(dplyr)
+
+# 資料框製作
+date <- seq.Date(as.Date("2023-01-01"), as.Date("2023-10-31"), by = "day") %>% as.character()
+data.hour <- matrix(0, ncol = 24, nrow = length(date), byrow = TRUE)
+colnames(data.hour) <- paste0("hour.", 1:24)
+rownames(data.hour) <- date
+
+# 資料填入
+for(i in 1:nrow(data)){
+  day <- paste0(data$年[i],
+               "-",
+               ifelse(data$月[i] > 9, data$月[i], paste0(0, data$月[i])),
+               "-",
+               ifelse(data$日[i] > 9, data$日[i], paste0(0, data$日[i]))
+               )
+  data.hour[day, data$時[i]] = data.hour[day, data$時[i]] + 1
+}
+
+# total per day
+data.hour <- data.frame(data.hour, total = rowSums(data.hour))
+
+print(data.hour)
+write.csv(x = data.hour, file = "hour.csv")
+
+# data.hour plot
+barplot(data.hour$total, main = "每日車禍量", xlab = "類別", ylab = "頻率", las = 2)
 ```
 
