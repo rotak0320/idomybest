@@ -215,7 +215,9 @@ get_admin_code <- function(lon, lat) {
 # 獲取每個座標的行政區域代碼
 data <- data %>% mutate(行政區域 = NA)
 for(i in 1:nrow(data)){
-  data$行政區域[i] <- get_admin_code(data$經度[i], data$緯度[i])
+  if(is.na(data$行政區域[i])){
+    data$行政區域[i] <- get_admin_code(data$經度[i], data$緯度[i])
+  }
 }
 
 # 打印結果
