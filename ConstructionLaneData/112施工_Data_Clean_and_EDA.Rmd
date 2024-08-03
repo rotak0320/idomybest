@@ -1,0 +1,313 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-07-28"
+---
+
+Ref:<https://freeway2024.tw/links#links>
+
+# Load data
+```{r}
+library(readxl)
+
+X112年1_10月道路施工路段資料 <- read_excel("C:/Users/adam8/OneDrive/Data project/Highway/施工路段資料/112年1-10月道路施工路段資料.xlsx", 
+     col_types = c("text", "text", "date", 
+         "date", "text", "text", "text", "text", 
+         "text"))
+```
+
+```{r}
+colnames(X112年1_10月道路施工路段資料) = c("事件編號",
+"事件階段",
+"階段開始時間",
+"階段結束時間",
+"路線ID",
+"方向ID",
+"起始里程",
+"終止里程",
+"占用車道ID")
+X112年1_10月道路施工路段資料 = X112年1_10月道路施工路段資料[-1,]
+X112施工 = data.frame(X112年1_10月道路施工路段資料)
+```
+
+# 資料轉換
+```{r}
+library(dplyr)
+
+# Creating a lookup table
+lookup_df_1 <- data.frame(
+  方向ID = c(1, 2, 3, 4),
+  方向 = c("南向", "北向", "東向", "西向")
+  )
+
+# Creating a lookup table
+lookup_df_2 <- data.frame(
+  路線ID = c(10010, 10018, 10019, 10020, 10030, 10031, 10040, 10050, 10060, 10080, 10100),
+  路線 = c("國1", "高港高架", "國1高架", "國2", "國3", "國3甲", "國4", "國5", "國6", "國8", "國10")
+  )
+
+X112施工 = X112施工 %>%
+  # character -> numeric
+  mutate(方向ID = as.numeric(X112施工$方向ID)) %>% 
+  # Matching
+  left_join(lookup_df_1, by = "方向ID") %>%
+  
+  # character -> numeric
+  mutate(路線ID = as.numeric(X112施工$路線ID)) %>% 
+  # Matching
+  left_join(lookup_df_2, by = "路線ID")
+
+# check na
+sum(is.na(X112施工$路線))
+sum(is.na(X112施工$方向))
+table(X112施工$路線ID[is.na(X112施工$路線)])
+
+# Fill na with origin data
+X112施工$路線[is.na(X112施工$路線)] = X112施工$路線ID[is.na(X112施工$路線)]
+```
+
+# 方向
+```{r}
+# Create a frequency table and sort it
+方向_tb = sort(table(X112施工$方向), decreasing = TRUE)
+
+# Create a new data frame
+result_df <- data.frame(
+  Description = names(方向_tb),
+  Count = as.integer(方向_tb)
+)
+
+# Compute Proportion
+total_count <- sum(result_df$Count)
+result_df <- transform(result_df, Proportion = Count / total_count)
+
+# Sort by Count in descending order
+top5_df <- result_df[order(-result_df$Count), ][1:4, ]
+
+# Use ggplot2 to create a horizontal bar chart and add proportion information
+ggplot(data = top5_df, aes(x = reorder(Description, Count), y = Count)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  # Make the bar chart horizontal
+  labs(title = "Construction Directions from January to October", x = "", y = "Frequency") +
+  theme_minimal() +
+  geom_text(aes(label = scales::percent(Proportion, accuracy = 1)), hjust = -0.1, size = 3)  # Add proportion information
+```
+
+# 路線
+```{r}
+# Create a frequency table and sort it
+路線_tb = sort(table(X112施工$路線), decreasing = TRUE)
+
+# Create a new data frame
+result_df <- data.frame(
+  Description = names(路線_tb),
+  Count = as.integer(路線_tb)
+)
+
+# Compute Proportion
+total_count <- sum(result_df$Count)
+result_df <- transform(result_df, Proportion = Count / total_count)
+
+# Sort by Count in descending order and select the top five descriptions
+top5_df <- result_df[order(-result_df$Count), ][1:5, ]
+
+# Use ggplot2 to create a horizontal bar chart and add proportion information
+ggplot(data = top5_df, aes(x = reorder(Description, Count), y = Count)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  # Make the bar chart horizontal
+  labs(title = "Top 5 Construction Routes from January to October", x = "", y = "Frequency") +
+  theme_minimal() +
+  geom_text(aes(label = scales::percent(Proportion, accuracy = 1)), hjust = -0.1, size = 3)  # Add proportion information
+```
+
+
+# 占用車道 
+```{r}
+# Load necessary library
+library(dplyr)
+
+# Convert the string data into a data frame
+占用車道id <- do.call(rbind, strsplit(X112施工$占用車道ID, split = ""))
+df <- as.data.frame(占用車道id, stringsAsFactors = FALSE)
+df[] <- lapply(df, as.numeric)
+
+# Summarize each lane's occupancy
+lane_summary <- colSums(df)
+
+# Print the summary
+print(lane_summary)
+
+# Function to categorize lane occupancy
+categorize_lanes <- function(lane_summary) {
+  result <- data.frame(
+    Category = c(
+      "內側路肩", "第1 車道", "第2 車道", "第3 車道", "第4 車道", "第5 車道", "第6 車道", "第7 車道", "第8 車道", "外側路肩", "內邊坡", "外邊坡", "中央分隔島", "地磅站車道", "其他(施工通報專用)"
+    ),
+    Occupancy = c(
+      lane_summary[1],
+      lane_summary[2],
+      lane_summary[3],
+      lane_summary[4],
+      lane_summary[5],
+      lane_summary[6],
+      lane_summary[7],
+      lane_summary[8],
+      lane_summary[9],
+      lane_summary[10],
+      lane_summary[11],
+      lane_summary[12],
+      lane_summary[13],
+      lane_summary[14],
+      lane_summary[20]
+    )
+  )
+  return(result)
+}
+
+# Categorize the lane occupancy
+summary_result <- categorize_lanes(lane_summary)
+
+# Print the categorized summary
+print(summary_result)
+
+
+```
+
+# 占用車道(依事件)
+```{r}
+library(ggplot2)
+
+# Create a frequency table and sort it
+占用車道ID_tb = sort(table(X112施工$占用車道ID), decreasing = TRUE)
+
+# Define the tranformation function
+convert_lane_occupancy <- function(binary_string) {
+  if (nchar(binary_string) != 20 && !grepl("^[12]+$", binary_string)) {
+    stop("输入的字符串格式不正确")
+  }
+  
+  if (grepl("^1+$", binary_string)) {
+    return("全阻斷")
+  } else if (grepl("^2+$", binary_string)) {
+    return("待查")
+  }
+  
+  if (!grepl("^[01]{20}$", binary_string)) {
+    stop("输入的字符串格式不正确")
+  }
+  
+  explanations <- c(
+    "內側路肩",
+    "第1車道", "第2車道", "第3車道", "第4車道", 
+    "第5車道", "第6車道", "第7車道", "第8車道",
+    "外側路肩",
+    "內邊坡",
+    "外邊坡",
+    "中央分隔島",
+    "地磅站車道",
+    "保留", "保留", "保留", "保留", "保留",
+    "其他(施工通報專用)"
+  )
+  
+  result <- vector("character", length = 0)
+  
+  for (i in seq_along(strsplit(binary_string, NULL)[[1]])) {
+    if (substr(binary_string, i, i) == "1") {
+      result <- c(result, explanations[i])
+    }
+  }
+  
+  return(paste(result, collapse = ","))
+}
+
+# Extract row names
+binary_strings <- names(占用車道ID_tb)
+
+# Apply conversion function and combine results
+converted_results <- sapply(binary_strings, convert_lane_occupancy, USE.NAMES = FALSE)
+
+# Create new data frame
+result_df <- data.frame(
+  OccupancyID = binary_strings,
+  Description = converted_results,
+  Count = as.integer(占用車道ID_tb)
+)
+
+# Calculate proportions
+total_count <- sum(result_df$Count)
+result_df <- transform(result_df, Proportion = Count / total_count)
+
+# Sort by Count in descending order and select top five descriptions
+top5_df <- result_df[order(-result_df$Count), ][1:5, ]
+
+# Use ggplot2 to create a horizontal bar chart and add proportion information
+ggplot(data = top5_df, aes(x = reorder(Description, Count), y = Count)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  # Make the bar chart horizontal
+  labs(title = "Top 5 Construction Lanes from January to October", x = "", y = "Frequency") +
+  theme_minimal() +
+  geom_text(aes(label = scales::percent(Proportion, accuracy = 1)), hjust = -0.1, size = 3)  # Add proportion information
+```
+
+
+
+
+
+# 時間
+```{r}
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+
+# 提取小時
+X112施工$開始小時 <- hour(X112施工$階段開始時間)
+X112施工$結束小時 <- hour(X112施工$階段結束時間)
+
+# 開始時間分析
+start_time_dist <- X112施工 %>%
+  group_by(開始小時) %>%
+  summarise(頻率 = n())
+
+ggplot(start_time_dist, aes(x = 開始小時, y = 頻率)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "施工開始時間分布", x = "小時", y = "頻率") +
+  theme_minimal() +
+  scale_x_continuous(breaks = 0:23)
+
+# 結束時間分析
+end_time_dist <- X112施工 %>%
+  group_by(結束小時) %>%
+  summarise(頻率 = n())
+
+ggplot(end_time_dist, aes(x = 結束小時, y = 頻率)) +
+  geom_bar(stat = "identity", fill = "lightgreen") +
+  labs(title = "施工結束時間分布", x = "小時", y = "頻率") +
+  theme_minimal() +
+  scale_x_continuous(breaks = 0:23)
+
+# 開始和結束時間的關係
+ggplot(X112施工, aes(x = 開始小時, y = 結束小時)) +
+  geom_point(alpha = 0.5) +
+  labs(title = "施工開始時間與結束時間的關係", x = "開始小時", y = "結束小時") +
+  theme_minimal() +
+  scale_x_continuous(breaks = 0:23) +
+  scale_y_continuous(breaks = 0:23)
+
+# 計算平均施工時長
+X112施工$施工時長 <- as.numeric(difftime(X112施工$結束時間, X112施工$開始時間, units = "hours"))
+平均施工時長 <- mean(X112施工$施工時長, na.rm = TRUE)
+print(paste("平均施工時長：", round(平均施工時長, 2), "小時"))
+
+# 按開始時間劃分的平均施工時長
+avg_duration_by_start <- X112施工 %>%
+  group_by(開始小時) %>%
+  summarise(平均時長 = mean(施工時長, na.rm = TRUE))
+
+ggplot(avg_duration_by_start, aes(x = 開始小時, y = 平均時長)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "不同開始時間的平均施工時長", x = "開始小時", y = "平均時長（小時）") +
+  theme_minimal() +
+  scale_x_continuous(breaks = 0:23)
+```
+
