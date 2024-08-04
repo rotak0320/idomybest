@@ -1,0 +1,319 @@
+---
+title: "A1 A2 A3"
+author: "Yao-Chih Hsu, "
+output: html_notebook
+---
+# references
+data download from [https://freeway2024.tw/](https://freeway2024.tw/).
+
+# dataset input
+```{r}
+library(readxl)
+A1_112_1_10 <- read_xlsx(path = "112年1-10月A1事故資料(113.01.12更新).xlsx")
+A2_112_1_10 <- read_xlsx(path = "112年1-10月A2事故資料(113.02.06更新).xlsx")
+A3_112_1_10 <- read_xlsx(path = "112年1-10月A3事故資料(113.02.06更新).xlsx")
+A1A2A3_113_1_2 <- read_xlsx(path = "113年1-2月A1A2A3交通事故資料.xlsx")
+```
+
+-------------------------------------------------------------
+# 112 Jan. to Oct. A1A2A3 accidents (A1A2A3_112_1_10)
+# data
+```{r}
+A1A2A3_112_1_10 <- rbind(A1_112_1_10, A2_112_1_10, A3_112_1_10)
+```
+
+# summary
+```{r}
+library(dplyr)
+summary(A1A2A3_112_1_10)
+
+n <- ncol(A1A2A3_112_1_10)
+A1A2A3_112_1_10.unique <- sapply(1:n, function(x){A1A2A3_112_1_10[ ,x] %>% unique() %>% unlist() %>% unname() %>% sort() %>% return()})
+names(A1A2A3_112_1_10.unique) = colnames(A1A2A3_112_1_10)
+print(A1A2A3_112_1_10.unique)
+summary(A1A2A3_112_1_10.unique)
+
+print(paste0("There have ", sum(is.na(A1A2A3_112_1_10)), " NA(s) in this dataset."))
+```
+
+# data plot
+```{r}
+# all
+A1A2A3_112_1_10.plot <- A1A2A3_112_1_10
+name <- names(A1A2A3_112_1_10.unique)
+for (i in 1:ncol(A1A2A3_112_1_10.plot)) {
+  barplot(table(A1A2A3_112_1_10.plot[ ,i]), main = name[i], xlab = "類別", ylab = "頻率", las = 2)
+}
+```
+
+-------------------------------------------------------------
+# 112 Jan. to Oct. A1 accidents (A1_112_1_10)
+# summary
+```{r}
+library(dplyr)
+summary(A1_112_1_10)
+
+n <- ncol(A1_112_1_10)
+A1_112_1_10.unique <- sapply(1:n, function(x){A1_112_1_10[ ,x] %>% unique() %>% unlist() %>% unname() %>% sort() %>% return()})
+names(A1_112_1_10.unique) = colnames(A1_112_1_10)
+print(A1_112_1_10.unique)
+summary(A1_112_1_10.unique)
+
+print(paste0("There have ", sum(is.na(A1_112_1_10)), " NA(s) in this dataset."))
+```
+
+# data plot
+```{r}
+# all
+A1_112_1_10.plot <- A1_112_1_10
+name <- names(A1_112_1_10.unique)
+for (i in 1:ncol(A1_112_1_10.plot)) {
+  barplot(table(A1_112_1_10.plot[ ,i]), main = name[i], xlab = "類別", ylab = "頻率", las = 2)
+}
+```
+
+-------------------------------------------------------------
+# 112 Jan. to Oct. A2 accidents (A2_112_1_10)
+# summary
+```{r}
+library(dplyr)
+summary(A2_112_1_10)
+
+n <- ncol(A2_112_1_10)
+A2_112_1_10.unique <- sapply(1:n, function(x){A2_112_1_10[ ,x] %>% unique() %>% unlist() %>% unname() %>% sort() %>% return()})
+names(A2_112_1_10.unique) = colnames(A2_112_1_10)
+print(A2_112_1_10.unique)
+summary(A2_112_1_10.unique)
+
+print(paste0("There have ", sum(is.na(A2_112_1_10)), " NA(s) in this dataset."))
+```
+
+# data plot
+```{r}
+# all
+A2_112_1_10.plot <- A2_112_1_10
+name <- names(A2_112_1_10.unique)
+for (i in 1:ncol(A2_112_1_10.plot)) {
+  barplot(table(A2_112_1_10.plot[ ,i]), main = name[i], xlab = "類別", ylab = "頻率", las = 2)
+}
+```
+
+
+-------------------------------------------------------------
+# 112 Jan. to Oct. A3 accidents (A3_112_1_10)
+# summary
+```{r}
+library(dplyr)
+summary(A3_112_1_10)
+
+n <- ncol(A3_112_1_10)
+A3_112_1_10.unique <- sapply(1:n, function(x){A3_112_1_10[ ,x] %>% unique() %>% unlist() %>% unname() %>% sort() %>% return()})
+names(A3_112_1_10.unique) = colnames(A3_112_1_10)
+print(A3_112_1_10.unique)
+summary(A3_112_1_10.unique)
+
+print(paste0("There have ", sum(is.na(A3_112_1_10)), " NA(s) in this dataset."))
+```
+
+# data plot
+```{r}
+# all
+A3_112_1_10.plot <- A3_112_1_10
+name <- names(A3_112_1_10.unique)
+for (i in 1:ncol(A3_112_1_10.plot)) {
+  barplot(table(A3_112_1_10.plot[ ,i]), main = name[i], xlab = "類別", ylab = "頻率", las = 2)
+}
+```
+
+
+-------------------------------------------------------------
+# 113 Jan. to Feb. A1A2A3 accidents (A1A2A3_113_1_2)
+# summary
+```{r}
+library(dplyr)
+summary(A1A2A3_113_1_2)
+
+n <- ncol(A1A2A3_113_1_2)
+A1A2A3_113_1_2.unique <- sapply(1:n, function(x){A1A2A3_113_1_2[ ,x] %>% unique() %>% unlist() %>% unname() %>% sort() %>% return()})
+names(A1A2A3_113_1_2.unique) = colnames(A1A2A3_113_1_2)
+print(A1A2A3_113_1_2.unique)
+summary(A1A2A3_113_1_2.unique)
+
+print(paste0("There have ", sum(is.na(A1A2A3_113_1_2)), " NA(s) in this dataset."))
+```
+
+# data plot
+```{r}
+# all
+A1A2A3_113_1_2.plot <- A1A2A3_113_1_2
+name <- names(A1A2A3_113_1_2.unique)
+for (i in 1:ncol(A1A2A3_113_1_2.plot)) {
+  barplot(table(A1A2A3_113_1_2.plot[ ,i]), main = name[i], xlab = "類別", ylab = "頻率", las = 2)
+}
+```
+
+-------------------------------------------------------------
+# 113 data classification
+```{r}
+A1_113_1_2 <- A1A2A3_113_1_2[A1A2A3_113_1_2$事故類別 == "A1", ]
+A2_113_1_2 <- A1A2A3_113_1_2[A1A2A3_113_1_2$事故類別 == "A2", ]
+A3_113_1_2 <- A1A2A3_113_1_2[A1A2A3_113_1_2$事故類別 == "A3", ]
+```
+
+-------------------------------------------------------------
+# 113 Jan. to Feb. A1 accidents (A1_113_1_2)
+# summary
+```{r}
+library(dplyr)
+summary(A1_113_1_2)
+
+n <- ncol(A1_113_1_2)
+A1_113_1_2.unique <- sapply(1:n, function(x){A1_113_1_2[ ,x] %>% unique() %>% unlist() %>% unname() %>% sort() %>% return()})
+names(A1_113_1_2.unique) = colnames(A1_113_1_2)
+print(A1_113_1_2.unique)
+summary(A1_113_1_2.unique)
+
+print(paste0("There have ", sum(is.na(A1_113_1_2)), " NA(s) in this dataset."))
+```
+
+# data plot
+```{r}
+# all
+A1_113_1_2.plot <- A1_113_1_2
+name <- names(A1_113_1_2.unique)
+for (i in 1:ncol(A1_113_1_2.plot)) {
+  barplot(table(A1_113_1_2.plot[ ,i]), main = name[i], xlab = "類別", ylab = "頻率", las = 2)
+}
+```
+
+-------------------------------------------------------------
+# 113 Jan. to Feb. A2 accidents (A2_113_1_2)
+# summary
+```{r}
+library(dplyr)
+summary(A2_113_1_2)
+
+n <- ncol(A2_113_1_2)
+A2_113_1_2.unique <- sapply(1:n, function(x){A2_113_1_2[ ,x] %>% unique() %>% unlist() %>% unname() %>% sort() %>% return()})
+names(A2_113_1_2.unique) = colnames(A2_113_1_2)
+print(A2_113_1_2.unique)
+summary(A2_113_1_2.unique)
+
+print(paste0("There have ", sum(is.na(A2_113_1_2)), " NA(s) in this dataset."))
+```
+
+# data plot
+```{r}
+# all
+A2_113_1_2.plot <- A2_113_1_2
+name <- names(A2_113_1_2.unique)
+for (i in 1:ncol(A2_113_1_2.plot)) {
+  barplot(table(A2_113_1_2.plot[ ,i]), main = name[i], xlab = "類別", ylab = "頻率", las = 2)
+}
+```
+
+-------------------------------------------------------------
+# 113 Jan. to Feb. A3 accidents (A3_113_1_2)
+# summary
+```{r}
+library(dplyr)
+summary(A3_113_1_2)
+
+n <- ncol(A3_113_1_2)
+A3_113_1_2.unique <- sapply(1:n, function(x){A3_113_1_2[ ,x] %>% unique() %>% unlist() %>% unname() %>% sort() %>% return()})
+names(A3_113_1_2.unique) = colnames(A3_113_1_2)
+print(A3_113_1_2.unique)
+summary(A3_113_1_2.unique)
+
+print(paste0("There have ", sum(is.na(A3_113_1_2)), " NA(s) in this dataset."))
+```
+
+# data plot
+```{r}
+# all
+A3_113_1_2.plot <- A3_113_1_2
+name <- names(A3_113_1_2.unique)
+for (i in 1:ncol(A3_113_1_2.plot)) {
+  barplot(table(A3_113_1_2.plot[ ,i]), main = name[i], xlab = "類別", ylab = "頻率", las = 2)
+}
+```
+
+------------------------------------------------------------
+# 國道1號
+```{r}
+# 拆分原資料
+highway_1_112_1_10 <- A1A2A3_112_1_10[A1A2A3_112_1_10$路線 == "國道1號", ]
+highway_1_112_1_10$時 <- as.integer(highway_1_112_1_10$時)
+highway_1_112_1_10$公里 <- as.integer(highway_1_112_1_10$公里)
+highway_1_112_1_10 <- highway_1_112_1_10[!is.na(highway_1_112_1_10$時), ]
+highway_1_112_1_10 <- highway_1_112_1_10[!is.na(highway_1_112_1_10$公里), ]
+print(highway_1_112_1_10)
+```
+
+```{r}
+# 製作國道每25公里每小時事故量表格
+per_km <- 25
+name <- ((1:round(374.3 / per_km)) - 1) * per_km
+highway_1_accidents_per_25km <- data.frame(matrix(data = 0, nrow = length(name), ncol = 24))
+rownames(highway_1_accidents_per_25km) <- name
+colnames(highway_1_accidents_per_25km) <- paste0("hour.", 0:23)
+
+for (i in 1:nrow(highway_1_112_1_10)) {
+  km <- (sort(c(name, highway_1_112_1_10$公里[i])) == highway_1_112_1_10$公里[i])[-1]
+  highway_1_accidents_per_25km[km, (highway_1_112_1_10$時[i] + 1)] = highway_1_accidents_per_25km[km, (highway_1_112_1_10$時[i] + 1)] + 1
+}
+print(highway_1_accidents_per_25km)
+```
+
+```{r}
+# plot per 25 km per hour
+plot_25km <- t(highway_1_accidents_per_25km)
+for (i in 1:ncol(plot_25km)) {
+  barplot(plot_25km[ ,i], main = paste0(colnames(plot_25km)[i], "km"), xlab = "時間", ylab = "頻率", las = 2)
+}
+```
+
+
+```{r}
+# 製作國道每1公里每小時事故量表格
+per_km <- 1
+name <- ((1:round(374.3 / per_km)) - 1) * per_km
+highway_1_accidents_per_1km <- data.frame(matrix(data = 0, nrow = length(name), ncol = 24))
+rownames(highway_1_accidents_per_1km) <- name
+colnames(highway_1_accidents_per_1km) <- paste0("hour.", 0:23)
+
+for (i in 1:nrow(highway_1_112_1_10)) {
+  km <- (sort(c(name, highway_1_112_1_10$公里[i])) == highway_1_112_1_10$公里[i])[-1]
+  highway_1_accidents_per_1km[km, (highway_1_112_1_10$時[i] + 1)] = highway_1_accidents_per_1km[km, (highway_1_112_1_10$時[i] + 1)] + 1
+}
+print(highway_1_accidents_per_1km)
+```
+
+```{r}
+# plot per 1 km per hour
+
+plot_1km <- t(highway_1_accidents_per_1km)
+for (i in 1:ncol(plot_1km)) {
+  png( 
+    filename = paste0("pic/", colnames(plot_1km)[i], "km.png"), # 文件名称
+    width = 875,           # 宽
+    height = 540,          # 高
+    units = "px",          # 单位
+    bg = "white",          # 背景颜色
+    res = 72)              # 分辨率
+  barplot(plot_1km[ ,i], main = paste0(colnames(plot_1km)[i], "km"), ylim = c(1, max(plot_1km)) , xlab = "時間", ylab = "頻率", las = 2)
+  dev.off()
+  }
+
+```
+
+
+
+
+
+
+
+
+
+
+
