@@ -11,6 +11,8 @@ from keras.api.layers import Dense, Dropout, Activation, Flatten, LSTM, TimeDist
 from keras.api.optimizers import Adam
 from keras.api.callbacks import EarlyStopping, ModelCheckpoint
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
 
 # ----- functions -----
 def ReadData(): # read data
@@ -46,6 +48,22 @@ def DataClean(data):
     data.drop(columns=one_hot_columns + drop_columns, inplace=True) # inplace >> 直接修改data 
     data = data.fillna(0)
     return data
+
+def ClassifyMinute(minute):
+    if minute < 10:
+        return 0
+    elif minute < 17:
+        return 1
+    elif minute < 30:
+        return 2
+    elif minute < 60:
+        return 3
+    else:
+        return 4
+
+def normalize(train): # 歸一化（又稱正規化 Normalization）
+  train_norm = train.apply(lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)))
+  return train_norm
 
 def buildTrain(train, y, pastDay = 30, futureDay = 5): # lag, 使用過去30天訓練預測未來5天
     X_train, Y_train = [], []
@@ -110,10 +128,11 @@ data = ReadData()
 
 # data clean
 data = DataClean(data)
+data['處理分鐘'] = data['處理分鐘'].apply(ClassifyMinute)
+#data = normalize(data)
 data.to_csv('output1.csv')
 
-X_train, Y_train = buildTrain(data, '處理分鐘', 1 , 1)
-#X_train, Y_train = data.drop(columns=['處理分鐘']), data['處理分鐘']
+X_train, Y_train = buildTrain(data, '處理分鐘', 500 , 1)
 X_train, Y_train = shuffle(X_train, Y_train)
 
 X_train, Y_train, X_val, Y_val = splitData(X_train, Y_train, 0.1)
@@ -136,6 +155,20 @@ model.fit(X_train,
 
 # 預測
 predicted = model.predict(X_val)
+def SortResult(data):
+    weight = (max(predicted) - min(predicted)) / 5
+    min1, max1 = min(predicted), max(predicted)
+    if data < min1 + weight:
+        return 0
+    elif data < min1 + 2 * weight:
+        return 1
+    elif data < min1 + 3 * weight:
+        return 2
+    elif data < max1:
+        return 3
+    else:
+        return 4
+predicted = np.array([SortResult(value) for value in predicted])
 
 # 繪製結果
 plt.plot(Y_val, label='True Value')
@@ -146,7 +179,16 @@ plt.ylabel('處理分鐘')
 plt.legend()
 plt.show()
 
+# 生成混淆矩陣
+cm = confusion_matrix(Y_val, predicted)
 
+# 繪製混淆矩陣
+plt.figure(figsize=(10,7))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.xlabel('Predicted')
+plt.ylabel('True')
+plt.title('Confusion Matrix')
+plt.show()
 
 
 
