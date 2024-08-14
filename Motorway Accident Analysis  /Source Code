@@ -1,1 +1,99 @@
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# ----- functions -----
+def ReadData():
+    data = pd.read_csv("output.csv")
+    return data
+
+def DataClean(data):
+    # Remove spaces from column names
+    data.columns = [col.replace(' ', '') for col in data.columns]
+
+    # Define factor columns and apply factorization
+    factor_columns = ['方向', '車輛1', '車輛2', '車輛3', '車輛4', '車輛5', '車輛6', '車輛7', '車輛8', '車輛9', '車輛10', '車輛11', '車輛12', '行政區域', '國道名稱']
+    for factor in factor_columns:
+        data[factor] = pd.factorize(data[factor])[0]
+
+    # Drop unwanted columns and fill missing values
+    drop_columns = ['事件排除_時', '事件排除_分', '經度', '緯度', '主線中斷註記', '肇事車輛', '死亡', '受傷', '翻覆事故註記', '施工事故註記', '危險物品車輛註記', '車輛起火註記', '冒煙車事故註記']
+    data.drop(columns=drop_columns, inplace=True)
+    data.fillna(0, inplace=True)
+    return data
+
+def ClassifyMinute(minute):
+    if minute < 10:
+        return 0
+    elif minute < 17:
+        return 1
+    elif minute < 30:
+        return 2
+    elif minute < 60:
+        return 3
+    else:
+        return 4
+
+def buildTrain(data, target, pastDays=30):
+    features = []
+    labels = []
+    for i in range(pastDays, len(data)):
+        features.append(data.iloc[i-pastDays:i].values.flatten())
+        labels.append(data.iloc[i][target])
+    return np.array(features), np.array(labels)
+
+# ----- data import -----
+data = ReadData()
+data = DataClean(data)
+data['處理分鐘'] = data['處理分鐘'].apply(ClassifyMinute)
+data.to_csv('output1.csv', index=False)
+
+# Prepare data for Random Forest
+X, y = buildTrain(data, '處理分鐘', pastDays=30)
+
+# Split data into train and test sets
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.1, random_state=10)
+
+# Initialize and train the Random Forest model
+model = RandomForestRegressor(n_estimators=100, random_state=10)  # Use RandomForestClassifier for classification
+model.fit(X_train, y_train)
+
+# Make predictions
+predicted = model.predict(X_val)
+
+# If it's a classification problem, convert predictions to classes
+# You can bin the continuous predictions into classes
+def bin_predictions(preds, bins=5):
+    bin_edges = np.linspace(min(preds), max(preds), bins+1)
+    return np.digitize(preds, bins=bin_edges, right=True) - 1
+
+if len(set(y)) > 2:  # If more than two classes, it's classification
+    predicted = bin_predictions(predicted)
+
+# Evaluate the model
+mse = mean_squared_error(y_val, predicted)
+print(f'Mean Squared Error: {mse}')
+
+# Confusion matrix and plotting
+if len(set(y)) <= 2:  # If binary classification
+    cm = confusion_matrix(y_val, predicted)
+    plt.figure(figsize=(10, 7))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.title('Confusion Matrix')
+    plt.show()
+
+# Plot results
+plt.plot(y_val, label='True Value')
+plt.plot(predicted, label='Predicted Value')
+plt.title('Prediction vs True Value')
+plt.xlabel('Sample Index')
+plt.ylabel('處理分鐘')
+plt.legend()
+plt.show()
 
