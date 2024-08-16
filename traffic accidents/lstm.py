@@ -221,7 +221,7 @@ data['處理分鐘'] = data['處理分鐘'].apply(ClassifyMinute)
 #data = normalize(data)
 data.to_csv('output1.csv')
 
-X_train, Y_train = buildTrain(data, '處理分鐘', 2000 , 1) # 過去2000比預測未來1筆
+X_train, Y_train = buildTrain(data, '處理分鐘', 100 , 1) # 過去100筆預測未來1筆
 X_train, Y_train = shuffle(X_train, Y_train)
 
 X_train, Y_train, X_val, Y_val = splitData(X_train, Y_train, 0.1)
@@ -233,6 +233,11 @@ callback = EarlyStopping(monitor = "loss",
                          verbose = 1, 
                          mode = "auto"
                          )
+
+X_train = X_train.astype(np.float32)
+Y_train = Y_train.astype(np.float32)
+X_val = X_val.astype(np.float32)
+Y_val = Y_val.astype(np.float32)
 
 model.fit(X_train, 
           Y_train, 
