@@ -35,7 +35,7 @@ def DataClean(data):
     """
 
     # factor
-    factor_columns = ['方向', '車輛1', '車輛2', '車輛3', '車輛4', '車輛5', '車輛6', '車輛7', '車輛8', '車輛9', '車輛10', '車輛11', '車輛12', '行政區域', '國道名稱', 'StationName', 'ID', 'Attribute', 'Location']
+    factor_columns = ['方向', '行政區域', '國道名稱', 'StationName', 'ID', 'Attribute', 'Location']
     data.factor_names = []
     for factor in factor_columns:
         factor_codes, factor_names = pd.factorize(data[factor])
@@ -47,7 +47,7 @@ def DataClean(data):
     data['死傷'] = data['死亡'] + data['受傷']
 
     # drop
-    drop_columns = ['事件排除_時', '事件排除_分', '經度', '緯度', '主線中斷註記', '肇事車輛', '死亡', '受傷', '翻覆事故註記', '施工事故註記', '危險物品車輛註記', '車輛起火註記', '冒煙車事故註記', 'Unnamed:0', 'Date', 'year', 'month', 'day']
+    drop_columns = ['事件排除_時', '事件排除_分', '經度', '緯度', '主線中斷註記', '肇事車輛', '死亡', '受傷', '翻覆事故註記', '施工事故註記', '危險物品車輛註記', '車輛起火註記', '冒煙車事故註記', 'Unnamed:0', 'Date', 'year', 'month', 'day', '車輛1', '車輛2', '車輛3', '車輛4', '車輛5', '車輛6', '車輛7', '車輛8', '車輛9', '車輛10', '車輛11', '車輛12']
     data.drop(columns=one_hot_columns + drop_columns, inplace=True) # inplace >> 直接修改data 
     
     data['Precipitation'] = [0.0 if T == "T" else T for T in data['Precipitation']] # 雨量為T表示雨量不足0.5mm
@@ -229,7 +229,7 @@ X_train, Y_train, X_val, Y_val = splitData(X_train, Y_train, 0.1)
 model = buildManyToOneModel(X_train.shape)
 
 callback = EarlyStopping(monitor = "loss", 
-                         patience = 100, 
+                         patience = 20, 
                          verbose = 1, 
                          mode = "auto"
                          )
@@ -241,7 +241,7 @@ Y_val = Y_val.astype(np.float32)
 
 model.fit(X_train, 
           Y_train, 
-          epochs=10000, 
+          epochs=5000, 
           batch_size=128, 
           validation_data=(X_val, Y_val), 
           callbacks=[callback]
@@ -262,7 +262,7 @@ def SortResult(data):
         return 3
     else:
         return 4
-predicted = np.array([SortResult(value) for value in predicted])
+# predicted = np.array([SortResult(value) for value in predicted])
 
 # 繪製結果
 plt.plot(Y_val, label='True Value')
