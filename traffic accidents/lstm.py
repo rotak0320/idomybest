@@ -203,7 +203,8 @@ for row in range(len(data)):
     min_index = np.argmin(distance_df, axis=1)
     # 資料依距離合併
     data_row_df = pd.DataFrame([data.iloc[row].values], columns=data.iloc[row].index)
-    rain_row_df = pd.DataFrame([rain.iloc[min_index].values[0]], columns=rain.columns)
+    rain_row_df = pd.DataFrame([rain_date.iloc[min_index].values[0]], columns=rain_date.columns)
+    # print(f'{row} {rain_row_df['Location']}')
     combine = pd.concat([data_row_df.reset_index(drop=True), rain_row_df.reset_index(drop=True)], axis=1)
     combine['distance'] = distance_df.iloc[0, min_index].values # 座標距離
     combine_row.append(combine)
