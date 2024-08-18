@@ -51,6 +51,7 @@ def DataClean(data):
     data.drop(columns=one_hot_columns + drop_columns, inplace=True) # inplace >> 直接修改data 
     
     data['Precipitation'] = [0.0 if T == "T" else T for T in data['Precipitation']] # 雨量為T表示雨量不足0.5mm
+    data['Precipitation'] = [0.0 if X == "X" else X for X in data['Precipitation']]
     data.astype(float)
     data = data.fillna(0)
     return data
